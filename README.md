@@ -1,11 +1,7 @@
 # 🏁 F1 Pit Wall Pro — AI Strategy Engine
 
 > A machine learning powered Formula 1 race strategy optimizer that predicts the optimal pit stop window and tyre compound selection in real time, based on live race inputs and historical multi-year F1 telemetry data.
-
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://distributedsystemsimulation-z5x7rghxwutjkwxocjz2gq.streamlit.app/)
-
 ---
-
 ## 🚀 Live Demo
 
 **[👉 Open F1 Pit Wall Pro](https://distributedsystemsimulation-z5x7rghxwutjkwxocjz2gq.streamlit.app/)**
@@ -119,14 +115,8 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 4. (Optional) Retrain the model locally
-The repo includes a pre-trained `f1_brain.pkl` so you can skip this step. If you want to retrain from scratch:
-```bash
-python train_local.py
-```
-> ⚠️ This downloads 3 years of F1 data via FastF1 and may take 20–40 minutes depending on your internet speed.
 
-### 5. Run the app
+### 4. Run the app
 ```bash
 streamlit run dashboard.py
 ```
