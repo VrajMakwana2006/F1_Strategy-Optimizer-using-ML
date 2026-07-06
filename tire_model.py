@@ -121,14 +121,18 @@ class AdvancedRacePaceModel:
 
     def load(self) -> bool:
         if os.path.exists(self.model_path):
-            with open(self.model_path, "rb") as f:
-                data = pickle.load(f)
-            self.model = data["model"]
-            self.feature_columns = data["feature_columns"]
-            self.track_mean_laptime = data.get("track_mean_laptime", {})
-            self.is_trained = True
-            print(f"Model loaded from {self.model_path}")
-            return True
+            try:
+                with open(self.model_path, "rb") as f:
+                    data = pickle.load(f)
+                self.model = data["model"]
+                self.feature_columns = data["feature_columns"]
+                self.track_mean_laptime = data.get("track_mean_laptime", {})
+                self.is_trained = True
+                print(f"Model loaded from {self.model_path}")
+                return True
+            except Exception as e:
+                print(f"Could not load cached model ({e}); retraining from scratch.")
+                return False
         return False
 
     # ------------------------------------------------------------------ #
