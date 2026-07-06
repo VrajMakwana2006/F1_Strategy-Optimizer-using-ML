@@ -1,7 +1,5 @@
 # F1 Pit Wall Pro — Requirements
 
-setuptools<82
-wheel
 fastf1==3.3.0
 streamlit==1.35.0
 pandas==2.2.2
