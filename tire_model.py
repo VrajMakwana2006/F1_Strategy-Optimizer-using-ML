@@ -2,7 +2,8 @@ import pandas as pd
 import numpy as np
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.preprocessing import LabelEncoder
-import pickle, os
+import pickle
+from pathlib import Path
 
 COMPOUND_DEGRADATION = {"SOFT": 0.18, "MEDIUM": 0.10, "HARD": 0.055, "INTERMEDIATE": 0.08, "WET": 0.04}
 COMPOUND_BASE_OFFSET = {"SOFT": -1.2, "MEDIUM": 0.0, "HARD": 1.3, "INTERMEDIATE": 8.0, "WET": 15.0}
@@ -31,7 +32,8 @@ class AdvancedRacePaceModel:
     COMPOUND_ORDER = ["SOFT", "MEDIUM", "HARD", "INTERMEDIATE", "WET"]
 
     def __init__(self, model_path: str = "f1_brain.pkl"):
-        self.model_path = model_path
+        project_root = Path(__file__).resolve().parent
+        self.model_path = project_root / model_path
         self.model = GradientBoostingRegressor(
             n_estimators=400, learning_rate=0.07, max_depth=5,
             subsample=0.8, random_state=42
@@ -111,29 +113,43 @@ class AdvancedRacePaceModel:
     # ------------------------------------------------------------------ #
 
     def save(self):
+        self.model_path.parent.mkdir(parents=True, exist_ok=True)
+    
         with open(self.model_path, "wb") as f:
-            pickle.dump({
-                "model": self.model,
-                "feature_columns": self.feature_columns,
-                "track_mean_laptime": self.track_mean_laptime,
-            }, f)
+            pickle.dump(
+                {
+                    "model": self.model,
+                    "feature_columns": self.feature_columns,
+                    "track_mean_laptime": self.track_mean_laptime,
+                },
+                f,
+            )
+    
         print(f"Model saved → {self.model_path}")
 
     def load(self) -> bool:
-        if os.path.exists(self.model_path):
-            try:
-                with open(self.model_path, "rb") as f:
-                    data = pickle.load(f)
-                self.model = data["model"]
-                self.feature_columns = data["feature_columns"]
-                self.track_mean_laptime = data.get("track_mean_laptime", {})
-                self.is_trained = True
-                print(f"Model loaded from {self.model_path}")
-                return True
-            except Exception as e:
-                print(f"Could not load cached model ({e}); retraining from scratch.")
-                return False
-        return False
+
+        if not self.model_path.exists():
+            print(f"No saved model found at {self.model_path}")
+            return False
+    
+        try:
+            with open(self.model_path, "rb") as f:
+                data = pickle.load(f)
+    
+            self.model = data["model"]
+            self.feature_columns = data["feature_columns"]
+            self.track_mean_laptime = data.get("track_mean_laptime", {})
+    
+            self.is_trained = True
+    
+            print(f"Model loaded from {self.model_path}")
+    
+            return True
+    
+        except Exception as e:
+            print(f"Error loading model: {e}")
+            return False
 
     # ------------------------------------------------------------------ #
     #  Prediction                                                          #
