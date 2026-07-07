@@ -36,19 +36,30 @@ class UniversalStrategyEngine:
     # ------------------------------------------------------------------ #
 
     def _build_global_cache(self):
-        """Pre-computes all (track, lap, age, compound) combinations."""
+        """Pre-computes all (track, lap, age, compound) combinations.
+
+        Predictions are batched per (track, compound) — one call to
+        model.predict() covering every (lap, age) pair — instead of calling
+        the model once per individual combination. This cuts cache-build
+        time from minutes to well under a second per track.
+        """
         total = 0
         for track in self.tracks_list:
             total_laps = self.max_laps_map.get(track, 60)
             for compound in COMPOUNDS:
-                for lap in range(1, total_laps + 1):
-                    for age in range(1, 55):
-                        t = self.global_pace_model.predict_lap_time(
-                            track=track, lap_number=lap, tire_age=age,
-                            compound=compound, track_temp=self.default_track_temp
-                        )
-                        self.global_ml_cache[(track, lap, age, compound)] = t
-                        total += 1
+                laps_ages = [(lap, age) for lap in range(1, total_laps + 1)
+                                          for age in range(1, 55)]
+                rows = [
+                    self.global_pace_model._build_row(
+                        track=track, lap_number=lap, tire_age=age,
+                        compound=compound, track_temp=self.default_track_temp
+                    )
+                    for lap, age in laps_ages
+                ]
+                preds = self.global_pace_model.predict_batch(rows)
+                for (lap, age), t in zip(laps_ages, preds):
+                    self.global_ml_cache[(track, lap, age, compound)] = float(t)
+                    total += 1
         print(f"Global cache built: {total:,} predictions cached.")
 
     # ------------------------------------------------------------------ #
